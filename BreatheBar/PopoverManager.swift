@@ -15,6 +15,7 @@ class PopoverManager: ObservableObject {
 
     popover.behavior = .transient
     popover.contentViewController = NSHostingController(rootView: contentView)
+//    popover.delegate = self
 
     createStatusBarItem()
     setupReminderTimer()
@@ -23,6 +24,13 @@ class PopoverManager: ObservableObject {
       self,
       selector: #selector(setupReminderTimer),
       name: NSApplication.didBecomeActiveNotification,
+      object: nil
+    )
+
+    NotificationCenter.default.addObserver(
+      self,
+      selector: #selector(handlePopoverCloseRequested),
+      name: .popoverCloseRequested,
       object: nil
     )
   }
@@ -34,18 +42,46 @@ class PopoverManager: ObservableObject {
       button.image?.isTemplate = true
       button.action = #selector(togglePopover(_:))
       button.target = self
+      // Respond to both left and right clicks
+      button.sendAction(on: [.leftMouseUp, .rightMouseUp])
     }
   }
 
   @objc public func togglePopover(_ sender: AnyObject?) {
     if let button = statusItem?.button {
+      let event = NSApp.currentEvent
+      let isRightClick = (event?.type == .rightMouseUp) || (event?.modifierFlags.contains(.control) ?? false)
       if popover.isShown {
-        // this line is not working
-        shadeWindow?.fadeOut()
-        popover.performClose(sender)
+        // Left click toggles close; right click keeps the popover open
+        if !isRightClick {
+          NotificationCenter.default.post(name: .stopAnimationRequested, object: nil)
+          if popover.isShown {
+            popover.performClose(nil)
+          }
+        }
       } else {
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        if !isRightClick, preferencesManager.startOnPress, sender != nil {
+          // Only auto-start when invoked by clicking the status bar icon (sender is not nil)
+          DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            NotificationCenter.default.post(name: .startAnimationRequested, object: nil)
+          }
+        }
       }
+    }
+  }
+
+  // MARK: - NSPopoverDelegate
+  func popoverDidShow(_ notification: Notification) { }
+
+  func popoverDidClose(_ notification: Notification) { }
+
+  // MARK: - Notifications
+  @objc private func handlePopoverCloseRequested() {
+    if popover.isShown {
+      popover.performClose(nil)
+    } else {
+      // Popover not shown; nothing to do
     }
   }
 
@@ -89,6 +125,10 @@ class PopoverManager: ObservableObject {
   private func showReminder() {
     if let button = statusItem?.button {
       popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+      // Reminders should always start the animation automatically
+      DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+        NotificationCenter.default.post(name: .startAnimationRequested, object: nil)
+      }
     }
   }
 

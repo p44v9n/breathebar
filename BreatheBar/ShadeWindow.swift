@@ -42,7 +42,7 @@ class ShadeWindow: NSWindow {
 
   func fadeIn(completion: (() -> Void)? = nil) {
     self.alphaValue = 0  // Ensure we start fully transparent
-    self.makeKeyAndOrderFront(nil)
+    self.orderFrontRegardless()
 
     // Use DispatchQueue to ensure the window is visible before animating
     DispatchQueue.main.async {

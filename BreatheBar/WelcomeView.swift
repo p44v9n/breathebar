@@ -38,7 +38,7 @@ struct WelcomeView: View {
   var firstStep: some View {
     VStack {
       // if let appIcon = NSImage(named: NSImage.applicationIconName) {
-        Image("Logo")
+        Image("logo")
           .resizable()
           .scaledToFill()
           .frame(width: 100, height: 100)

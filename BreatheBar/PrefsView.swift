@@ -111,18 +111,43 @@ struct GeneralPrefsView: View {
         VStack(
           alignment: .leading, spacing: 5,
           content: {
-            Toggle(
-              isOn: .constant(false),
-              label: {
-                Text("Start On Press")
+            HStack(spacing: 10) {
+              // Text("Default duration:")
+              Picker("Default duration:", selection: $preferencesManager.defaultDurationValue) {
+                Text("20 seconds").tag(20)
+                Text("1 minute").tag(60)
+                Text("3 minutes").tag(180)
               }
-            ).disabled(true)
+              .frame(width: 250)
+            }
+            .onChange(of: preferencesManager.defaultDurationValue) { newValue in
+              preferencesManager.defaultDuration = (
+                name: durationName(for: newValue),
+                value: newValue
+              )
+            }
             Text(
-              "Start the animation straight away when clicking on the menu bar icon, instead of opening a menu."
+              "Set how long the animation lasts."
             ).font(.system(size: 11)).foregroundStyle(Color.gray).fixedSize(
               horizontal: false, vertical: true
-            ).frame(width: 420, alignment: .leading)
+            ).frame(width: 300, alignment: .leading)
           })
+
+        // VStack(
+        //   alignment: .leading, spacing: 5,
+        //   content: {
+        //     Toggle(
+        //       isOn: $preferencesManager.startOnPress,
+        //       label: {
+        //         Text("Start On Press")
+        //       }
+        //     )
+        //     Text(
+        //       "Start the animation straight away when clicking on the menu bar icon, instead of opening a menu."
+        //     ).font(.system(size: 11)).foregroundStyle(Color.gray).fixedSize(
+        //       horizontal: false, vertical: true
+        //     ).frame(width: 420, alignment: .leading)
+        //   })
         VStack(
           alignment: .leading, spacing: 5,
           content: {
@@ -140,6 +165,17 @@ struct GeneralPrefsView: View {
           })
 
       })
+  }
+}
+
+extension GeneralPrefsView {
+  fileprivate func durationName(for value: Int) -> String {
+    switch value {
+    case 20: return "Short"
+    case 60: return "Medium"
+    case 180: return "Long"
+    default: return "Custom"
+    }
   }
 }
 
@@ -233,11 +269,11 @@ struct DisplayPrefsView: View {
     let fileName: String
     switch preferencesManager.animationStyle {
     case 1:
-      fileName = "breathing_text"
-    case 2:
       fileName = "breathing_orb"
-    default:
+    case 2:
       fileName = "breathing_text"
+    default:
+      fileName = "breathing_orb"
     }
     self.riveViewModel = RiveViewModel(fileName: fileName)
     self.riveViewModel?.play(animationName: "6 seconds")

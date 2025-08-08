@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 
 struct ContentView: View {
   @ObservedObject private var preferencesManager = PreferencesManager.shared
@@ -6,7 +7,7 @@ struct ContentView: View {
   @State private var duration: (name: String, value: Int)
   @State private var animationVisible = false
   @Environment(\.presentationMode) var presentationMode
-  @State private var showMenu = false
+  @State private var expandMenu = true
   @State private var timer: Timer?
   @State private var shadeWindow: ShadeWindow?
   var onCloseShade: (() -> Void)?
@@ -26,6 +27,16 @@ struct ContentView: View {
         animationView
       }
     }
+    .onReceive(NotificationCenter.default.publisher(for: .startAnimationRequested)) { _ in
+      if !animationVisible {
+        showShadeWindow()
+        animationVisible = true
+        startTimer()
+      }
+    }
+    .onReceive(NotificationCenter.default.publisher(for: .stopAnimationRequested)) { _ in
+      closePopover()
+    }
   }
 
   private var mainView: some View {
@@ -37,7 +48,7 @@ struct ContentView: View {
       }
       .clipped()
 
-      if showMenu {
+      if expandMenu {
         menuOptions
       }
     }.padding(10)
@@ -81,7 +92,7 @@ struct ContentView: View {
 
   private var menuButton: some View {
     Button(action: {
-      showMenu.toggle()
+      expandMenu.toggle()
     }) {
       Image(systemName: "ellipsis")
         .imageScale(.large)
@@ -95,7 +106,7 @@ struct ContentView: View {
       Button(action: {
         showPreferences()
       }) {
-        Label("Preferences", systemImage: "gearshape.fill")
+        Label("Settings", systemImage: "gearshape.fill")
       }
 
       Button(action: {
@@ -155,6 +166,7 @@ struct ContentView: View {
     duration = (
       name: preferencesManager.defaultDurationName, value: preferencesManager.defaultDurationValue
     )
+    NotificationCenter.default.post(name: .popoverCloseRequested, object: nil)
     self.presentationMode.wrappedValue.dismiss()
   }
 

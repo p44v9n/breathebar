@@ -2,7 +2,7 @@ import SwiftUI
 
 class PreferencesManager: ObservableObject {
   @AppStorage("defaultDurationName") var defaultDurationName: String = "Short"
-  @AppStorage("defaultDurationValue") var defaultDurationValue: Int = 20
+  @AppStorage("defaultDurationValue") var defaultDurationValue: Int = 60
 
   var defaultDuration: (name: String, value: Int) {
     get { (defaultDurationName, defaultDurationValue) }
@@ -17,6 +17,7 @@ class PreferencesManager: ObservableObject {
   @AppStorage("popoverSize") var popoverSize: String = "sm"
   @AppStorage("menuBarIcon") var menuBarIcon: String = "Monochrome"
   @AppStorage("showBreathCount") var showBreathCount: Bool = false
+  @AppStorage("startOnPress") var startOnPress: Bool = true
   @AppStorage("animationStyle") var animationStyle: Int = 1
   @AppStorage("timeBreatheIn") var timeBreatheIn: Int = 5
   @AppStorage("timeBreatheHold") var timeBreatheHold: Int = 5
@@ -40,4 +41,7 @@ class PreferencesManager: ObservableObject {
 
 extension Notification.Name {
   static let reminderSettingsChanged = Notification.Name("reminderSettingsChanged")
+  static let startAnimationRequested = Notification.Name("startAnimationRequested")
+  static let stopAnimationRequested = Notification.Name("stopAnimationRequested")
+  static let popoverCloseRequested = Notification.Name("popoverCloseRequested")
 }
