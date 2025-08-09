@@ -14,7 +14,7 @@ class PreferencesWindowController: NSWindowController {
       defer: false
     )
     window.contentViewController = hostingController
-    window.title = "Preferences"
+    window.title = "BreatheBar Settings"
 
     // Center the window on the screen
     window.center()
@@ -30,6 +30,27 @@ class PreferencesWindowController: NSWindowController {
     NSApp.activate(ignoringOtherApps: true)
     window.makeKeyAndOrderFront(self)
 
+  }
+
+  override func showWindow(_ sender: Any?) {
+    super.showWindow(sender)
+
+    guard let window = self.window else { return }
+
+    // Recreate content if it was released on close
+    if window.contentViewController == nil {
+      let prefsView = PrefsView()
+      let hostingController = NSHostingController(rootView: prefsView)
+      window.contentViewController = hostingController
+    }
+
+    // Ensure the app is active and the window is front-most
+    if window.isMiniaturized {
+      window.deminiaturize(nil)
+    }
+    NSApp.activate(ignoringOtherApps: true)
+    window.makeKeyAndOrderFront(self)
+    window.orderFrontRegardless()
   }
 
   override func close() {

@@ -66,7 +66,7 @@ struct WelcomeView: View {
       VStack(spacing: 0) {
         VStack {
 //            Spacer()
-          Text("Choose Your Look")
+          Text("Choose your look:")
             .font(.title3)
             .multilineTextAlignment(.center)
             .padding(.top, 40)
