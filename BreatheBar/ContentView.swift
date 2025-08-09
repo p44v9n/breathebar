@@ -4,20 +4,13 @@ import Combine
 struct ContentView: View {
   @ObservedObject private var preferencesManager = PreferencesManager.shared
   @State private var preferencesWindowController: PreferencesWindowController?
-  @State private var duration: (name: String, value: Int)
   @State private var animationVisible = false
   @Environment(\.presentationMode) var presentationMode
-  @State private var expandMenu = true
   @State private var timer: Timer?
   @State private var shadeWindow: ShadeWindow?
   var onCloseShade: (() -> Void)?
 
-  init() {
-    let prefs = PreferencesManager.shared
-    _duration = State(
-      initialValue: (name: prefs.defaultDurationName, value: prefs.defaultDurationValue))
-    _animationVisible = State(initialValue: false)
-  }
+  init() {}
 
   var body: some View {
     Group {
@@ -40,31 +33,25 @@ struct ContentView: View {
   }
 
   private var mainView: some View {
-    VStack {
-      HStack {
-        durationPicker
-        startButton
-        menuButton
-      }
-      .clipped()
-
-      if expandMenu {
-        menuOptions
-      }
-    }.padding(10)
+    VStack(alignment: .center, spacing: 8) {
+      durationPicker
+        HStack(alignment: .center, spacing: 8)       {
+            startButton
+            settingsButton
+            quitButton
+        }
+    }
+    .padding(10)
   }
 
   private var durationPicker: some View {
-    Picker("How long:", selection: $duration.value) {
+    Picker("How long:", selection: $preferencesManager.defaultDurationValue) {
       Text("20 seconds").tag(20)
       Text("1 minute").tag(60)
       Text("3 minutes").tag(180)
     }
-    .frame(maxWidth: 120)
+    .frame(width: 140.0)
     .labelsHidden()
-    .onChange(of: duration.value) { newValue in
-      duration.name = durationName(for: newValue)
-    }
 
   }
 
@@ -90,30 +77,19 @@ struct ContentView: View {
     }
   }
 
-  private var menuButton: some View {
+  private var settingsButton: some View {
     Button(action: {
-      expandMenu.toggle()
+      showPreferences()
     }) {
-      Image(systemName: "ellipsis")
-        .imageScale(.large)
-
+      Label("Settings", systemImage: "gearshape.fill")
     }
-
   }
 
-  private var menuOptions: some View {
-    HStack {
-      Button(action: {
-        showPreferences()
-      }) {
-        Label("Settings", systemImage: "gearshape.fill")
-      }
-
-      Button(action: {
-        NSApplication.shared.terminate(nil)
-      }) {
-        Label("Quit", systemImage: "xmark.circle.fill")
-      }
+  private var quitButton: some View {
+    Button(action: {
+      NSApplication.shared.terminate(nil)
+    }) {
+      Label("Quit", systemImage: "xmark.circle.fill")
     }
   }
 
@@ -121,14 +97,14 @@ struct ContentView: View {
     ZStack(alignment: .topLeading) {
       VStack {
         AnimationView(
-          count: $duration.value,
-          duration: $duration,
+          count: $preferencesManager.defaultDurationValue,
+          duration: durationBinding,
           isAnimating: $animationVisible,
           onComplete: closePopover
         )
 
         if PreferencesManager.shared.showBreathCount {
-          Text("Remaining breaths: \(Int(ceil(Double(duration.value) / 6.0)))")
+          Text("Remaining breaths: \(Int(ceil(Double(preferencesManager.defaultDurationValue) / 6.0)))")
         }
       }
 
@@ -163,16 +139,13 @@ struct ContentView: View {
 
   private func closePopover() {
     stopAnimation()
-    duration = (
-      name: preferencesManager.defaultDurationName, value: preferencesManager.defaultDurationValue
-    )
     NotificationCenter.default.post(name: .popoverCloseRequested, object: nil)
     self.presentationMode.wrappedValue.dismiss()
   }
 
   private func startTimer() {
     timer?.invalidate()
-    timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(duration.value), repeats: false) {
+    timer = Timer.scheduledTimer(withTimeInterval: TimeInterval(preferencesManager.defaultDurationValue), repeats: false) {
       _ in
       closePopover()
     }
@@ -191,13 +164,18 @@ struct ContentView: View {
     }
   }
 
-  private func durationName(for value: Int) -> String {
-    switch value {
-    case 20: return "Short"
-    case 60: return "Medium"
-    case 180: return "Long"
-    default: return "Custom"
-    }
+  private var durationBinding: Binding<(name: String, value: Int)> {
+    Binding<(name: String, value: Int)>(
+      get: {
+        (
+          name: PreferencesManager.durationName(for: preferencesManager.defaultDurationValue),
+          value: preferencesManager.defaultDurationValue
+        )
+      },
+      set: { newValue in
+        preferencesManager.defaultDurationValue = newValue.value
+      }
+    )
   }
 
   private func showShadeWindow() {

@@ -120,12 +120,8 @@ struct GeneralPrefsView: View {
               }
               .frame(width: 250)
             }
-            .onChange(of: preferencesManager.defaultDurationValue) { newValue in
-              preferencesManager.defaultDuration = (
-                name: durationName(for: newValue),
-                value: newValue
-              )
-            }
+            // Name will auto-sync via PreferencesManager.didSet on defaultDurationValue
+            .onChange(of: preferencesManager.defaultDurationValue) { _ in }
             Text(
               "Set how long the animation lasts."
             ).font(.system(size: 11)).foregroundStyle(Color.gray).fixedSize(
@@ -165,17 +161,6 @@ struct GeneralPrefsView: View {
           })
 
       })
-  }
-}
-
-extension GeneralPrefsView {
-  fileprivate func durationName(for value: Int) -> String {
-    switch value {
-    case 20: return "Short"
-    case 60: return "Medium"
-    case 180: return "Long"
-    default: return "Custom"
-    }
   }
 }
 

@@ -1,8 +1,14 @@
 import SwiftUI
 
 class PreferencesManager: ObservableObject {
-  @AppStorage("defaultDurationName") var defaultDurationName: String = "Short"
-  @AppStorage("defaultDurationValue") var defaultDurationValue: Int = 60
+  @AppStorage("defaultDurationName") var defaultDurationName: String = "Medium"
+  @AppStorage("defaultDurationValue") var defaultDurationValue: Int = 60 {
+    didSet {
+      // Keep the human-friendly name in sync whenever the stored value changes
+      defaultDurationName = PreferencesManager.durationName(for: defaultDurationValue)
+      objectWillChange.send()
+    }
+  }
 
   var defaultDuration: (name: String, value: Int) {
     get { (defaultDurationName, defaultDurationValue) }
@@ -10,6 +16,16 @@ class PreferencesManager: ObservableObject {
       defaultDurationName = newValue.name
       defaultDurationValue = newValue.value
       objectWillChange.send()
+    }
+  }
+
+  /// Maps seconds to the human-friendly duration name used by animations/state machines
+  static func durationName(for value: Int) -> String {
+    switch value {
+    case 20: return "Short"
+    case 60: return "Medium"
+    case 180: return "Long"
+    default: return "Custom"
     }
   }
 
